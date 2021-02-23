@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+</head>
+<body>	
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="plugins/Map/leaflet-src.js"></script>
+<script src="plugins/Map/leaflet-indoor.js"></script>
+<script src="plugins/Map/Map.php"></script>
+<style>
+#map {position: absolute; top: 0; bottom: 0; left: 0; right: 0;}
+.info {
+            width: 150px;
+            padding: 6px 8px;
+            font: 18px/20px Arial, Helvetica, sans-serif;
+            background: white;
+            background: rgba(255,255,255,1);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+</style>	
+ <div style="width: auto">
+ <div style="padding: 300px">	
+	<div id = "map">
+    <script type="text/JavaScript">
+
+
+		//Creazione della mappa
+
+        var osmUrl = '//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            osm = new L.TileLayer(osmUrl, {
+                maxZoom: 22,
+                attribution: "Map data &copy; OpenStreetMap contributors"
+            });
+
+        var map = new L.Map('map', {
+            layers: [osm],
+            center: new L.LatLng(43.7232,12.6368),
+            zoom: 19
+        }); 
+
+		// Configurazione e riconoscimento del file geoJson
+
+        $.getJSON("plugins/Map/data.json", function(geoJSON) {
+			var indoorLayer = new L.Indoor(geoJSON, {
+				getLevel: function(feature) { 
+					if (feature.properties.relations.length  === 0)
+						return null;
+
+                    return feature.properties.relations[0].reltags.level;
+                },
+               	
+				onEachFeature: function(feature, layer) {
+					layer.bindPopup(JSON.stringify(feature.properties, null, 4));
+                },
+
+                style: function(feature) {
+					var fill = 'white';
+							
+					if (feature.properties.tags.buildingpart === 'room') {
+						fill = '#169EC6';
+					} else if (feature.properties.tags.buildingpart === 'verticalpassage') {
+						fill = '#89eb35';
+					} else if (feature.properties.tags.buildingpart === 'wall') {
+						fill = '#808080';
+					} else if (feature.properties.tags.buildingpart === 'toilets') {
+						fill = '#ffff00';
+					} else if (feature.properties.tags.buildingpart === 'corridor') {
+						fill = 'white';
+					}
+
+                    return {
+                        fillColor: fill,
+                        weight: 1,
+                        color: '#666',
+                        fillOpacity: 1
+                    };
+                }
+            });   
+
+            indoorLayer.setLevel("0");
+            indoorLayer.addTo(map);
+	   
+
+            var levelControl = new L.Control.Level({
+                level: "0",
+                levels: indoorLayer.getLevels()
+			});
+
+			var location = <?php echo json_encode($device["purpose"]); ?>;
+			var splitted_loc = location.split(",");
+			var lat = splitted_loc[1];
+			var lng = splitted_loc[2];
+			var deviceType = splitted_loc[3];
+			var deviceLevel = splitted_loc[4];
+			var devstatus	= <?php echo json_encode($device["status"]); ?>;
+
+			var icon
+			if (devstatus == true && deviceType == "switch") {
+				icon = L.icon({
+					iconUrl: "plugins/Map/icone/switch-on.ico",
+					iconSize:     [32, 32], 	// dimensione dell'icona
+					iconAnchor:   [lat,lng], 	// punto dell'icona che corrisponderà alla posizione del marker
+					popupAnchor:  [-3, -76] 	// punto da cui dovrebbe aprirsi il popup relativo a iconaAnchor
+				});
+				
+			} else if (devstatus == false && deviceType == "switch") {
+				icon = L.icon({
+					iconUrl: "plugins/Map/icone/switch-off.ico",
+					iconSize:     [32, 32], 	// dimensione dell'icona
+					iconAnchor:   [lat,lng], 	// punto dell'icona che corrisponderà alla posizione del marker
+					popupAnchor:  [-3, -76] 	// punto da cui dovrebbe aprirsi il popup relativo a iconaAnchor
+				});
+			
+			}  else if (devstatus == true && deviceType == "router") {
+				icon = L.icon({
+					iconUrl: "plugins/Map/icone/router-green.ico",
+					iconSize:     [32, 32], 	// dimensione dell'icona
+					iconAnchor:   [lat,lng], 	// punto dell'icona che corrisponderà alla posizione del marker
+					popupAnchor:  [-3, -76] 	// punto da cui dovrebbe aprirsi il popup relativo a iconaAnchor
+
+				});
+
+			} else if (devstatus == false && deviceType == "router") {
+				icon = L.icon({
+					iconUrl: "plugins/Map/icone/router-red.ico",
+					iconSize:     [32, 32], 	// dimensione dell'icona
+					iconAnchor:   [lat,lng], 	// punto dell'icona che corrisponderà alla posizione del marker
+					popupAnchor:  [-3, -76] 	// punto da cui dovrebbe aprirsi il popup relativo a iconaAnchor
+				});
+			} 
+				
+			myMarker = L.marker([lat,lng],{ icon: icon });				
+
+            		// Collega il controllo di livello allo strato interno
+			levelControl.addEventListener("levelchange", indoorLayer.setLevel, indoorLayer);
+			levelControl.addEventListener("levelchange", function(e) {
+				if(e.newLevel == deviceLevel) {
+					map.addLayer(myMarker)
+				} else {
+					map.removeLayer(myMarker)
+				}
+			}, indoorLayer);
+            levelControl.addTo(map);
+        });
+
+        var legend = L.control({position: 'bottomleft'});
+
+        legend.onAdd = function(map) {
+            var d = 	"Leggenda colori: "+
+		    	" stanza = blu "+
+			" scala = verde "+
+			" toilets = giallo "+
+			" muro = grigio"+
+			" corridoio = bianco "+
+			" switch on = verde  "+
+			" switch off = rosso"
+
+            var div = L.DomUtil.create('div', 'info legend');
+            div.appendChild(document.createTextNode(d));
+            return div;
+        };
+
+        legend.addTo(map);
+	
+    </script>
+</div>
+</div>
+</div>
+</body>
+</html>
