@@ -1,0 +1,68 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "id": "way/00001",
+            "properties": {
+                "type": "way",
+         	"id": "00001",
+                "name": "name",
+		"tags": {
+                    "buildingpart": "room",
+                    "height": "4",
+                    "name": "room"
+                },
+                "relations": [
+                    {
+                        "role": "buildingpart",
+            		"rel": "111111",
+            	"reltags":{
+              		"height": "4",
+              		"level": "0",
+              		"name": "level0",
+              		"type": "level"
+                        }
+                    }
+                ],
+                "meta": {}
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": .....
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "way/00002",
+            "properties": {
+                "type": "way",
+		"id": "00002",
+                "material": "concrete",
+                "name": "wall",
+            	"tags": {
+                    	"buildingpart": "wall",
+                    	"height": "4",
+						"name": "wall"
+                },
+                "relations": [
+                    {
+                        "role": "buildingpart",
+                        "rel": "111111",
+                        "reltags": {
+                            "height": "4",
+                            "level": "0",
+                            "name": "livellozero",
+                            "type": "level"
+                        }
+                    }
+                ],
+                "meta": {}
+            },	
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": ........
+            }
+        },
+    ]
+}
